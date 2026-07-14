@@ -1,0 +1,33 @@
+class Solution:
+    def dailyTemperatures(self, temperatures: List[int]) -> List[int]:
+        # This is the result array pre-filled with 0 (the default for days with no warmer future)
+        result = [0] * len(temperatures)
+        # This Stack is for holding indices of days awaiting a warmer temperature
+        stack = []
+
+        # Scan each day with its index i and temperature temp
+        for i, temp in enumerate(temperatures):
+            # While the stack is non-empty and today is warmer than the day on top of stack, pop that waiting day's index
+            while stack and temp > temperatures[stack[-1]]:
+                prevIndex = stack.pop()
+                # Its answer is the gap: i - prevIndex days until warmer
+                result[prevIndex] =  i - prevIndex
+            # Push today's index — it now waits for its own warmer day
+            stack.append(i)
+        
+        return result
+
+        # TC: O(n) -> Each index is pushed once and popped once across the entire run. The while looks nested but total pops ≤ n — amortized O(1) per day
+        # SC: O(n) -> The stack holds up to n indices (e.g. a strictly decreasing temperature array where nothing ever gets popped until the end)
+        
+
+        # Solution Description: For each day we want the distance to the next warmer day. This is the classic "next greater element" problem, solved with a monotonic decreasing stack of indices. We scan left to right, keeping a stack of days that are still waiting for a warmer temperature. When the current day is warmer than the day at the top of the stack, we've found that day's answer — pop it and record the day gap (current index - popped index). We keep popping while the current day is warmer than the stack's top, since one warm day can resolve multiple waiting days. Days that never get a warmer future day stay at 0 (the default).
+
+        # Next Greater Element -> The canonical use of a monotonic stack
+        # Monotonic Stack (decreasing) -> Stack holds indices of days still waiting for a warmer day
+
+        # Why a monotonic decreasing stack? -> The stack always holds indices whose temperatures are in decreasing order from bottom to top. The decreasing order is what guarantees correctness — when a warm day arrives, it resolves the most recent (smallest) waiting days first, in the right order. 
+        # We only push after popping everything smaller-or-equal that today beats. So anything left on the stack is STRICTLY WARMER than today. 
+        # An if would resolve only one day per step — missing the others. The while drains all the days that this warm day satisfies. One warm day can be the answer for multiple waiting days at once.
+        # Why store indices, not temperatures? -> Storing indices gives us both pieces of information; storing values would lose the positional data we need for the gap. index lets us fetch the temp on demand. So we get both the position AND the value from one index.
+        # The problem asks for a strictly warmer day. Equal temperatures don't count.
